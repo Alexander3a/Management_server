@@ -26,9 +26,9 @@ public class Main {
         System.out.println("Thanks for using Server Manager by Alex");
     }
     public void openloop(){
-        new Timer().schedule(new TimerTask() {
-            @Override
-            public void run() {
+//        new Timer().schedule(new TimerTask() {
+//            @Override
+//            public void run() {
                 try {
                     ssocket = new ServerSocket(11113);
                     Socket socket = ssocket.accept();
@@ -37,8 +37,8 @@ public class Main {
                 }catch (IOException e){
                     e.printStackTrace();
                 }
-            }
-        },0);
+//            }
+//        },0);
     }
     public void loop() throws IOException{
         System.out.println(sockets.size());
@@ -103,5 +103,4 @@ public class Main {
             }
         });
     }
-    
 }
