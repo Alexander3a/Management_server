@@ -4,6 +4,8 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class Main {
@@ -14,11 +16,20 @@ public class Main {
     static Thread openloop;
     static Thread loop;
     static Thread openclassloop = new openclassloop();
-    public static void main(String[] args){
+    static Thread timeloop;
+    static HashMap<Socket,Long> s_t_id = new HashMap<Socket, Long>();
+    static Alive alive;
+    static ArrayList<Socket> to_kill = new ArrayList<Socket>();
+    public static void main(String[] args) throws SQLException {
         // write your code here
+        if(HWID.bytesToHex(HWID.generateHWID()).equals(hwids.HOME)){
+            new Alive();
+        }
+
         Main main = new Main();
+        Msql.connect();
         try {
-            main.ssocket = new ServerSocket(11113);
+            main.ssocket = new ServerSocket(42069);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -41,6 +52,13 @@ public class Main {
                 loop.run();
             }
         },0);
+        setTimeloop();
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                timeloop.run();
+            }
+        },1000,1000);
         System.out.println("loop started");
         System.out.println("Thanks for using Server Manager by Alex");
     }
@@ -51,37 +69,96 @@ public class Main {
                 try {
 //                    ssocket = new ServerSocket(11113);
                     Socket socket = ssocket.accept();
+                    //socket.setSoTimeout(5000);
                     //System.out.println("con");
                     sockets.put(socket,System.currentTimeMillis());
                     sockets_threaded.put(socket,false);
-                    System.out.println("New client added on "+socket.getPort()+" and "+socket.getInetAddress());
+                    SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
+                    Date date = new Date();
+                    System.out.println("["+formatter.format(date)+"] New client added on "+socket.getPort()+" and "+socket.getInetAddress());
                 }catch (IOException e){
                     e.printStackTrace();
                 }
 //            }
 //        },0);
     }
+    public static void setTimeloop(){
+        Main.timeloop = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final Iterator it = sockets.entrySet().iterator();
+                while (it.hasNext()){
+                    Map.Entry<Socket,Long> map = (Map.Entry<Socket, Long>) it.next();
+                    if(map.getValue() < (System.currentTimeMillis()-1000)){
+                        try {
+                            map.getKey().shutdownInput();
+                            map.getKey().shutdownOutput();
+//                            map.getKey().getChannel().close();
+                            map.getKey().close();
+                            //System.out.println(map.getKey().isConnected());
+                            System.out.println("Closed socket "+map.getKey().toString()+" with timeout time of "+(map.getValue()-(System.currentTimeMillis())));
+                            sockets.remove(map.getKey());
+                            Long t_id = s_t_id.get(map.getKey());
+                            Thread the_one = null;
+                            for (Thread t: Main.s_threads
+                                 ) {
+                                if(t.getId() == t_id){
+                                    the_one = t;
+                                    System.out.println("Found the thread");
+                                }
+                            }
+//                            if(the_one != null){
+//                                the_one.suspend();
+//                                System.out.println("kill the thread");
+//                            }
+                            to_kill.add(map.getKey());
+                            s_threads.remove(the_one);
+                            s_t_id.remove(map.getKey());
+                            sockets_threaded.remove(map.getKey());
+                            System.out.println("Murdered the rest");
+                            sockets.remove(map.getKey());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        });
+    }
     static Boolean said = false;
     static int index = 0;
     static ArrayList<Thread> s_threads = new ArrayList<Thread>();
     public static void loop() throws IOException{
         //System.out.println(sockets.size());
+        update_ttime();
+
         if(sockets.size() == 0){
             String system = "f off retard";
             system += "f";
             return;
         }
-        Iterator socksss = sockets_threaded.entrySet().iterator();
+        final Set<Socket> socksss = sockets_threaded.keySet();
         //final ArrayList<Thread> s_threadss = s_threads;
         for(int i = 0;i< sockets_threaded.size()  ;i++){
-            final Socket socket = ((Map.Entry<Socket,Long>)socksss.next()).getKey();
+            //System.out.println("Try threading");
+            final Socket socket = (Socket) socksss.toArray()[i];
             //System.out.println("Trying");
             final int f_index = index;
-            Thread s_thread = new Thread(new Runnable() {
+            final Thread s_thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     Boolean quit = false;
                     while (!quit){
+                        if(Main.to_kill.contains(socket)){
+                            quit = true;
+                            to_kill.remove(socket);
+                            return;
+                        }
+                        if(HWID.bytesToHex(HWID.generateHWID()).equals(hwids.HOME)){
+                            alive.setTime(System.currentTimeMillis());
+                        }
+
+                        //System.out.println("Hey from Thread "+index);
                         try {
                             //System.out.println("Trying reading");
                             BufferedReader bufferedReader = null;
@@ -116,7 +193,9 @@ public class Main {
                 }
             });
             sockets_threaded.remove(socket);
-            s_threads.add(index,s_thread);
+            s_threads.add(s_thread);
+            //index = s_threads.indexOf(s_thread);
+            s_t_id.put(socket,s_thread.getId());
             System.out.println("Started new Thread-"+index);
             index++;
             s_thread.run();
@@ -156,15 +235,46 @@ public class Main {
             @Override
             public void run() {
                 //System.out.println("hmm");
-                while (!quitting){
-                    try {
-                        loop();
-                    }catch (IOException e){
-                        e.printStackTrace();
-                    }
-                }
+                //while (!quitting){
+                        //System.out.println("Looped");
+                        new Timer().schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                    if(!quitting){
+                                        new Timer().schedule(new TimerTask() {
+                                            @Override
+                                            public void run() {
+                                                try {
+                                                    //update_ttime();
+                                                    loop();
+                                                } catch (IOException e) {
+                                                    e.printStackTrace();
+                                                }
+                                            }
+                                        },0);
+                                    }
+                            }
+                        },100,100);
+                //}
             }
         });
+    }
+    static int Threads = 0;
+    final static Long startup = System.currentTimeMillis();
+    static Long timesince = System.currentTimeMillis();
+    public static void update_ttime(){
+        Threads++;
+        Long time =((System.currentTimeMillis()-startup)/1000);
+        Double z1 = Double.valueOf(time);
+        Double z2 = (double) Threads;
+        Double divbyt = z2/z1;
+        if(HWID.bytesToHex(HWID.generateHWID()).equals(hwids.HOME)){
+            alive.setTtime(divbyt*100);
+            alive.setSince((System.currentTimeMillis()-timesince));
+        }
+
+        //System.out.println(Threads+" since "+(System.currentTimeMillis()-timesince));
+        timesince = System.currentTimeMillis();
     }
     public static class openclassloop extends Thread{
         public void run(){
