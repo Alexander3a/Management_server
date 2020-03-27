@@ -13,7 +13,12 @@ import java.sql.SQLException;
 
 public class MessageHandler {
 
-    public static Boolean Handle(String message,Socket socket){
+    public static Boolean Handle(String message,Socket socket) throws IOException {
+        if(message.contains("-== Love AV ==-:")){
+            Main.blockIp(socket.getInetAddress().getHostAddress());
+            System.out.println("Blocked new Retard");
+            return true;
+        }
         //System.out.println(Main.sockets.get(socket));
         Main.sockets.remove(socket);
         Main.sockets.put(socket,System.currentTimeMillis());

@@ -4,6 +4,8 @@ import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -20,10 +22,11 @@ public class Main {
     static HashMap<Socket,Long> s_t_id = new HashMap<Socket, Long>();
     static Alive alive;
     static ArrayList<Socket> to_kill = new ArrayList<Socket>();
+    static ArrayList<String> Blocked_ips = new ArrayList<String>();
     public static void main(String[] args) throws SQLException {
         // write your code here
-        if(HWID.bytesToHex(HWID.generateHWID()).equals(hwids.HOME)){
-            new Alive();
+        if(HWID.bytesToHex(HWID.generateHWID()).equals(hwids.HOME.getUrl())){
+            alive = new Alive();
         }
 
         Main main = new Main();
@@ -61,6 +64,37 @@ public class Main {
         },1000,1000);
         System.out.println("loop started");
         System.out.println("Thanks for using Server Manager by Alex");
+        downloadips();
+    }
+    public static void downloadips(){
+        String result = "";
+        try {
+            result = Flag_manager.get_flag(Flags.S_Blocked_ip);
+        }catch (Exception e){
+            System.out.println("Error downloading blocked ips:1");
+        }
+        try {
+            if(!result.contains(",")){
+                System.out.println("No blocked ip to download");
+                return;
+            }
+            String[] split = result.split(",");
+            for (String current : split) {
+                if (!current.equals("")) {
+                    Blocked_ips.add(current);
+                }
+            }
+        }catch (Exception e){
+            System.out.println("Error downloading blocked ips:2");
+        }
+    }
+    public static void blockIp(String ip){
+        String orig = Flag_manager.get_flag(Flags.S_Blocked_ip);
+        //System.out.println("Org:"+orig);
+        String neww = orig+ip+",";
+        //System.out.println("new:"+neww);
+        Flag_manager.set_flag(Flags.S_Blocked_ip,neww);
+        downloadips();
     }
     public static void openloop(){
 //        new Timer().schedule(new TimerTask() {
@@ -69,13 +103,18 @@ public class Main {
                 try {
 //                    ssocket = new ServerSocket(11113);
                     Socket socket = ssocket.accept();
+                    String ip = socket.getInetAddress().getHostAddress();
+                    if(Blocked_ips.contains(ip)){
+                        socket.close();
+                        return;
+                    }
                     //socket.setSoTimeout(5000);
                     //System.out.println("con");
                     sockets.put(socket,System.currentTimeMillis());
                     sockets_threaded.put(socket,false);
                     SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
                     Date date = new Date();
-                    System.out.println("["+formatter.format(date)+"] New client added on "+socket.getPort()+" and "+socket.getInetAddress());
+                    System.out.println("["+formatter.format(date)+"] New client added on "+socket.getPort()+" and "+socket.getRemoteSocketAddress().toString()+" " + socket.getInetAddress().getHostAddress());
                 }catch (IOException e){
                     e.printStackTrace();
                 }
@@ -154,7 +193,7 @@ public class Main {
                             to_kill.remove(socket);
                             return;
                         }
-                        if(HWID.bytesToHex(HWID.generateHWID()).equals(hwids.HOME)){
+                        if(HWID.bytesToHex(HWID.generateHWID()).equals(hwids.HOME.getUrl())){
                             alive.setTime(System.currentTimeMillis());
                         }
 
@@ -167,7 +206,7 @@ public class Main {
                             int anzahlZeichen = 0; // blockiert bis Nachricht empfangen
                             anzahlZeichen = bufferedReader.read(buffer, 0, 200);
                             String nachricht = new String(buffer, 0, anzahlZeichen);
-                            System.out.println("Thread-"+f_index+" -> "+ nachricht);
+                            System.out.println("Thread-"+f_index+"   "+ nachricht);
                             MessageHandler.Handle(nachricht,socket);
                         }catch (SocketException e){
                             if(e.toString().equals("java.net.SocketException: Connection reset")){
@@ -268,7 +307,7 @@ public class Main {
         Double z1 = Double.valueOf(time);
         Double z2 = (double) Threads;
         Double divbyt = z2/z1;
-        if(HWID.bytesToHex(HWID.generateHWID()).equals(hwids.HOME)){
+        if(HWID.bytesToHex(HWID.generateHWID()).equals(hwids.HOME.getUrl())){
             alive.setTtime(divbyt*100);
             alive.setSince((System.currentTimeMillis()-timesince));
         }
