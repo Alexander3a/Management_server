@@ -1,5 +1,7 @@
 package de.alex.money_server;
 
+import de.alex.money_server.Exception.Blocked;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -82,6 +84,7 @@ public class Main {
             for (String current : split) {
                 if (!current.equals("")) {
                     Blocked_ips.add(current);
+                    System.out.println("Added "+current);
                 }
             }
         }catch (Exception e){
@@ -89,6 +92,12 @@ public class Main {
         }
     }
     public static void blockIp(String ip){
+        if(ip == null){
+            throw new RuntimeException();
+        }
+        if(ip.equalsIgnoreCase("")){
+            throw new RuntimeException();
+        }
         String orig = Flag_manager.get_flag(Flags.S_Blocked_ip);
         //System.out.println("Org:"+orig);
         String neww = orig+ip+",";
@@ -105,7 +114,9 @@ public class Main {
                     Socket socket = ssocket.accept();
                     String ip = socket.getInetAddress().getHostAddress();
                     if(Blocked_ips.contains(ip)){
+                        socket.sendUrgentData(69420);
                         socket.close();
+                        System.out.println("Refusing blocked Connection");
                         return;
                     }
                     //socket.setSoTimeout(5000);
@@ -207,7 +218,12 @@ public class Main {
                             anzahlZeichen = bufferedReader.read(buffer, 0, 200);
                             String nachricht = new String(buffer, 0, anzahlZeichen);
                             System.out.println("Thread-"+f_index+"   "+ nachricht);
-                            MessageHandler.Handle(nachricht,socket);
+                            try {
+                                MessageHandler.Handle(nachricht,socket);
+                            }catch (Blocked e){
+                                sockets.remove(socket);
+                                quit=true;
+                            }
                         }catch (SocketException e){
                             if(e.toString().equals("java.net.SocketException: Connection reset")){
                                 if(!said){

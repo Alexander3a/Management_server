@@ -1,6 +1,7 @@
 package de.alex.money_server;
 
 import de.alex.money_server.Exception.Banned;
+import de.alex.money_server.Exception.Blocked;
 import de.alex.money_server.Exception.WrongUuid;
 
 import java.io.IOException;
@@ -17,7 +18,7 @@ public class MessageHandler {
         if(message.contains("-== Love AV ==-:")){
             Main.blockIp(socket.getInetAddress().getHostAddress());
             System.out.println("Blocked new Retard");
-            return true;
+            throw new Blocked(0,"Blocked");
         }
         //System.out.println(Main.sockets.get(socket));
         Main.sockets.remove(socket);
