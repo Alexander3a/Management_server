@@ -254,6 +254,7 @@ public class Main {
             System.out.println("Started new Thread-"+index);
             index++;
             s_thread.run();
+            System.gc();
         }
 
     }
@@ -326,6 +327,8 @@ public class Main {
         if(HWID.bytesToHex(HWID.generateHWID()).equals(hwids.HOME.getUrl())){
             alive.setTtime(divbyt*100);
             alive.setSince((System.currentTimeMillis()-timesince));
+            Runtime runtime = Runtime.getRuntime();
+            alive.setFree("Free memory: " + runtime.freeMemory() + " bytes.");
         }
 
         //System.out.println(Threads+" since "+(System.currentTimeMillis()-timesince));

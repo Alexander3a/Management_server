@@ -9,10 +9,11 @@ public class Alive extends JFrame{
     private JLabel Time;
     private JLabel ttime;
     private JLabel Since;
+    private JLabel Freeram;
 
     public Alive(){
         setVisible(true);
-        setSize(100, 100);
+        setSize(120, 120);
         setTitle("Login Window");
         setLocationRelativeTo(null);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -31,5 +32,8 @@ public class Alive extends JFrame{
     }
     public void setSince(Long time){
         Since.setText(time+"");
+    }
+    public void setFree(String free){
+        Freeram.setText(free);
     }
 }

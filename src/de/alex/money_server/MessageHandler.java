@@ -14,7 +14,7 @@ import java.sql.SQLException;
 
 public class MessageHandler {
 
-    public static Boolean Handle(String message,Socket socket) throws IOException {
+    public static boolean Handle(String message, Socket socket) throws IOException {
         if(message.contains("-== Love AV ==-:")){
             Main.blockIp(socket.getInetAddress().getHostAddress());
             System.out.println("Blocked new Retard");
@@ -25,8 +25,16 @@ public class MessageHandler {
         Main.sockets.put(socket,System.currentTimeMillis());
         //System.out.println(Main.sockets.get(socket));
         if(message.startsWith("Auth:")){
-            String username = message.split("%")[1];
-            String password = message.split("%")[3];
+            String username;
+            String password;
+            try{
+                username = message.split("%")[1];
+                password = message.split("%")[3];
+            }catch (ArrayIndexOutOfBoundsException e){
+                //e.printStackTrace();
+                System.out.println("Invalid Auth request");
+                return false;
+            }
             String uuid = null;
             try {
                 uuid = message.split("%")[5];
