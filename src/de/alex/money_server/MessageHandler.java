@@ -11,6 +11,7 @@ import java.net.Socket;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 public class MessageHandler {
 
@@ -24,6 +25,33 @@ public class MessageHandler {
         Main.sockets.remove(socket);
         Main.sockets.put(socket,System.currentTimeMillis());
         //System.out.println(Main.sockets.get(socket));
+        if(message.startsWith("Captcha:")){
+            String in = message.replace("Captcha:","");
+            String cname = in.split("&")[0];
+            ArrayList<String> items = new ArrayList<String>();
+            for(int i = 1;i< in.split("&").length  ;i++){
+                items.add(in.split("&")[i]);
+            }
+            String xd = cname+" ";
+            for(int i = 0;i< items.size()  ;i++){
+                xd+= items.get(i);
+                if(i != items.size()-1){
+                    xd+="&";
+                }
+            }
+            Writer.Write(xd);
+            schreibeNachricht(socket,"ok");
+            return true;
+        }
+        if(message.startsWith("snot:")){
+            Long ctime = System.currentTimeMillis()/1000;
+            if((Long.parseLong(Flag_manager.get_flag(Flags.LastNotification))-ctime< 10)){
+
+                Flag_manager.set_flag(Flags.LastNotification,ctime+"");
+            }
+            schreibeNachricht(socket,"ok");
+            return true;
+        }
         if(message.startsWith("Auth:")){
             String username;
             String password;
@@ -48,6 +76,24 @@ public class MessageHandler {
                 }
             }
             try {
+                try {
+                if(Flag_manager.get_flag(Flags.S_Blocked_ip) == null){
+                    if(!Msql.isConnected()){
+                        System.out.println("Reconnecting");
+                        Msql.connect();
+                    }
+                }
+                }catch (Exception e){
+                    if(!Msql.isConnected()){
+                        System.out.println("Reconnecting");
+                        Msql.connect();
+                    }
+                }
+
+                if(!Msql.isConnected()){
+                    System.out.println("Reconnecting");
+                    Msql.connect();
+                }
                 if(login(username,password,uuid)){
                     try {
                         schreibeNachricht(socket,"%"+Config.getUsername()+"%%"+Config.getPassword()+"%");

@@ -62,11 +62,13 @@ public class Main {
             @Override
             public void run() {
                 timeloop.run();
+                System.gc();
             }
         },1000,1000);
         System.out.println("loop started");
         System.out.println("Thanks for using Server Manager by Alex");
         downloadips();
+        Writer.in();
     }
     public static void downloadips(){
         String result = "";
@@ -213,9 +215,9 @@ public class Main {
                             //System.out.println("Trying reading");
                             BufferedReader bufferedReader = null;
                             bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                            char[] buffer = new char[200];
+                            char[] buffer = new char[2000];
                             int anzahlZeichen = 0; // blockiert bis Nachricht empfangen
-                            anzahlZeichen = bufferedReader.read(buffer, 0, 200);
+                            anzahlZeichen = bufferedReader.read(buffer, 0, 2000);
                             String nachricht = new String(buffer, 0, anzahlZeichen);
                             System.out.println("Thread-"+f_index+"   "+ nachricht);
                             try {
