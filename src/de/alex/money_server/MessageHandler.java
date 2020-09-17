@@ -77,17 +77,17 @@ public class MessageHandler {
             }
             try {
                 try {
-                if(Flag_manager.get_flag(Flags.S_Blocked_ip) == null){
-                    if(!Msql.isConnected()){
-                        System.out.println("Reconnecting");
-                        Msql.connect();
+                    if(Flag_manager.get_flag(Flags.S_Blocked_ip) == null){
+                        if(!Msql.isConnected()){
+                            System.out.println("Reconnecting");
+                            Msql.connect();
+                        }
                     }
-                }
                 }catch (Exception e){
-                    if(!Msql.isConnected()){
+//                    if(!Msql.isConnected()){
                         System.out.println("Reconnecting");
                         Msql.connect();
-                    }
+//                    }
                 }
 
                 if(!Msql.isConnected()){

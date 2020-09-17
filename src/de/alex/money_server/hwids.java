@@ -1,7 +1,7 @@
 package de.alex.money_server;
 
 public enum hwids {
-    HOME("0A863245054456E0F816576A7882CE13"),SERVER("ad");
+    HOME("8BB09A1159BE36A78EA83EF0F85E2E62"),SERVER("ad");
 
 
     private String url;

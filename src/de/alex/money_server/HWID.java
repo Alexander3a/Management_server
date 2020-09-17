@@ -3,6 +3,7 @@ package de.alex.money_server;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Map;
 
 public class HWID {
     private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
@@ -12,18 +13,36 @@ public class HWID {
             MessageDigest hash = MessageDigest.getInstance("MD5");
 
             String s = System.getProperty("os.name") +
-                    System.getProperty("os.arch") +
-                    System.getProperty("os.version") +
-                    Runtime.getRuntime().availableProcessors() +
+//                    System.getProperty("os.arch") +
+//                    System.getProperty("os.version") +
+//                    Runtime.getRuntime().availableProcessors() +
                     System.getenv("PROCESSOR_IDENTIFIER") +
                     System.getenv("PROCESSOR_ARCHITECTURE") +
-                    System.getenv("PROCESSOR_ARCHITEW6432") +
                     System.getenv("NUMBER_OF_PROCESSORS");
+            System.out.println(s);
             return hash.digest(s.getBytes());
         } catch (NoSuchAlgorithmException e) {
             throw new Error("Algorithm wasn't found.", e);
         }
     }
+    public static byte[] generateHWID_super() {
+        try {
+            MessageDigest hash = MessageDigest.getInstance("MD5");
+            String s = "";
+            for (Map.Entry<String, String> s_2:System.getenv().entrySet()) {
+                if(s_2.getKey().equals("Path"))continue;
+                s+=s_2;
+//                System.out.println(s_2);
+//
+            }
+
+//            System.out.println(s);
+            return hash.digest(s.getBytes());
+        } catch (NoSuchAlgorithmException e) {
+            throw new Error("Algorithm wasn't found.", e);
+        }
+    }
+
 
     public static byte[] hexStringToByteArray(String s) {
         int len = s.length();

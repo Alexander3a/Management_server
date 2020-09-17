@@ -25,11 +25,17 @@ public class Main {
     static Alive alive;
     static ArrayList<Socket> to_kill = new ArrayList<Socket>();
     static ArrayList<String> Blocked_ips = new ArrayList<String>();
+    static String buf_hwid = HWID.bytesToHex(HWID.generateHWID());
     public static void main(String[] args) throws SQLException {
         // write your code here
-        if(HWID.bytesToHex(HWID.generateHWID()).equals(hwids.HOME.getUrl())){
+//        System.out.println(HWID.bytesToHex(HWID.generateHWID_super()));
+//        if(1==1){
+//            return;
+//        }
+        if(buf_hwid.equals(hwids.HOME.getUrl())){
             alive = new Alive();
         }
+//        System.out.println(HWID.bytesToHex(HWID.generateHWID()));
 
         Main main = new Main();
         Msql.connect();
@@ -50,6 +56,13 @@ public class Main {
                 //System.out.println("openloop started");
             }
         },0);
+        new Timer().schedule(new TimerTask() {
+            @Override
+            public void run() {
+                System.gc();
+                //System.out.println("openloop started");
+            }
+        },0,60*1000);
         new Timer().schedule(new TimerTask() {
             @Override
             public void run() {
@@ -206,7 +219,7 @@ public class Main {
                             to_kill.remove(socket);
                             return;
                         }
-                        if(HWID.bytesToHex(HWID.generateHWID()).equals(hwids.HOME.getUrl())){
+                        if(buf_hwid.equals(hwids.HOME.getUrl())){
                             alive.setTime(System.currentTimeMillis());
                         }
 
@@ -326,7 +339,7 @@ public class Main {
         Double z1 = Double.valueOf(time);
         Double z2 = (double) Threads;
         Double divbyt = z2/z1;
-        if(HWID.bytesToHex(HWID.generateHWID()).equals(hwids.HOME.getUrl())){
+        if(buf_hwid.equals(hwids.HOME.getUrl())){
             alive.setTtime(divbyt*100);
             alive.setSince((System.currentTimeMillis()-timesince));
             Runtime runtime = Runtime.getRuntime();
